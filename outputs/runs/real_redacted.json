@@ -92,10 +92,3 @@
 - `dns_resolves`: `false` on 53/54; `true` only on the single NUKED row — consistent with the "site still live ⇒ not available" signal.
 
 ---
-
-## Notes for your portfolio use
-
-- **Do not re-run this pipeline against the same source and publish the tokenized output unmodified** — a determined reader can brute-force `refinance<city>.com`-style patterns from the retained `value_band`/`age_years_whois`/`snapshot_count` columns. If this is going on a public site, either (a) apply k-anonymity (suppress any row where the tuple `(age_bucket, value_band, snapshot_count)` is unique), or (b) shuffle `value_band` within `verdict_key` buckets before export.
-- The `audit_log` weights are the single biggest IP leak in the original file; they're gone, but if you have the raw file anywhere in your repo history, treat that as compromised.
-- The `name_in_domain: true` rows (2 of them) are the highest re-identification risk in the original — both names are common, but the domain strings themselves are the leak vector. They're fully tokenized above.
-- `elite: []` being empty is itself a portfolio-relevant fact (your scanner found zero domains passing all elite criteria in this batch) — keep it visible so the demo shows the empty-state handling.
