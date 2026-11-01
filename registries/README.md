@@ -1,0 +1,1 @@
+This particular portion of the project is obviously gonna be fully redacted. Included are 19 different registries detailing information for how the project should score each domain with penalties or positive awards.
