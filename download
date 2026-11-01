@@ -1,0 +1,12 @@
+node_modules/
+*.db
+*.db.corrupt.*
+.env
+outputs/**/*.json
+outputs/**/*.csv
+.cache/
+outputs/**/*.txt
+*.db.lock
+*.db.tmp-*
+__pycache__/
+*.pyc

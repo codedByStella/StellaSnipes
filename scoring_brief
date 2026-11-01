@@ -1,0 +1,85 @@
+StellaSnipes — Scoring Brief
+The Business
+Acquire expired domains with existing local-service search relevance, rebuild lightweight landing pages, route inbound calls to local businesses, and monetize qualified leads.
+The Only Question That Matters
+Will a local business pay for the next qualified call this domain generates?
+
+If yes, surface it. If no, deprioritize it.
+
+What a GOOD Domain Looks Like
+The core concept:
+[US City/Region] + [High-Value Local Service] = Commercial Potential
+
+
+A strong candidate generally has:
+1. US geography at city or metro level. Local relevance is central to the business model.
+2. A callable service category. The domain should represent a service where customers reasonably contact a business directly.
+3. A clean name. Pronounceability, readability, and naming quality matter.
+4. Specificity. A recognizable service is more useful than a generic commercial term.
+Service Categories
+Service categories are ranked according to estimated commercial value and likelihood of generating qualified calls.
+- High value: Legal, specialized medical, restoration, and certain roofing services.
+- Medium value: HVAC, plumbing, electrical, pest control, automotive services, and financial services.
+- Lower value: Moving, cleaning, landscaping, garage doors, gutters, and window services.
+[REDACTED: Exact lead-value estimates and commercial tier multipliers.]
+
+Candidate Exclusion Criteria
+Pattern	Reason
+No meaningful US geography	Lacks local targeting relevance
+Foreign geographic targeting	Outside the intended market
+Dead or unsuitable verticals	No meaningful local call-generation opportunity
+Brandable or abstract names	Weak service and buyer intent
+Content and media terminology	Indicates readership rather than direct service demand
+Hyphens and numeric patterns	Can reduce trust and naming quality
+Generic enterprise terminology	Weak consumer-facing call intent
+State-only generic combinations	Insufficient local specificity
+
+
+Scoring Priority Order
+When evaluating scoring changes, preserve this priority:
+1. Geographic relevance: Identify city and regional signals. Local relevance is foundational.
+2. Service relevance: Determine whether the domain represents a callable local service.
+3. Name quality: Evaluate readability, spelling, length, and pronounceability.
+4. Commercial synergy: Reward combinations where geography, service category, buyer intent, and linguistic relevance reinforce one another.
+[REDACTED: Exact scoring weights, tier multipliers, synergy bonuses, geographic fallback values, and penalty thresholds.]
+
+What the Pipeline Stages Do
+Gatekeeper (M0): Removes obvious unsuitable candidates before expensive evaluation. Its purpose is to eliminate clear garbage without prematurely rejecting viable inventory.
+
+Scorer (M1): Evaluates surviving candidates and ranks them according to lead-generation potential. Produces a prioritized candidate set for further evaluation.
+
+Health Check (M2): Evaluates the strongest candidates using external evidence, including:
+- Wayback Machine history
+- RDAP availability
+- Content and reputation flags
+- Historical and technical evidence
+Results are classified into actionable, review-required, and rejected categories.
+
+What Makes an Actionable Candidate
+A strong candidate combines:
+- Meaningful historical website evidence.
+- Current availability evidence.
+- Relevant geographic and service signals.
+- No disqualifying content or reputation flags.
+- A sufficiently strong commercial evaluation.
+[REDACTED: Exact health-score requirements, snapshot thresholds, profit-score thresholds, and qualification rules.]
+
+Common Mistakes to Avoid
+Don't let the Brandable pool near M2. Brandable scoring rewards a different type of asset. Those candidates should not enter local lead-generation evaluation without appropriate filtering.
+
+Don't let the SEO pool near M2 unfiltered. SEO signals can identify content and authority properties that have little direct local call-generation value.
+
+Don't confuse exclusion with ranking. A candidate that has a naming-quality weakness may deserve a scoring penalty rather than automatic rejection.
+
+Don't treat broad geographic relevance as equivalent to local specificity. City-level and state-level geographic signals have different commercial value.
+
+Don't assume every geographic match is reliable. Short city names and common substrings can create false positives. Geographic matching needs appropriate disambiguation.
+
+Evaluation Objectives
+The pipeline is designed to:
+- Process large volumes of expired-domain inventory.
+- Reduce the candidate pool through staged evaluation.
+- Reserve expensive checks for promising candidates.
+- Produce a small, prioritized set for human acquisition decisions.
+- Keep commercial scoring separate from technical health evaluation.
+[REDACTED: Daily ingestion targets, gate-survival counts, candidate limits, conversion targets, and revenue projections.]
