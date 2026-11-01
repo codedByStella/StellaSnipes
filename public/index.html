@@ -1,0 +1,974 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>StellaSnipes</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#0d1117;--surface:#161b22;--border:#30363d;--text:#c9d1d9;--muted:#8b949e;
+  --accent:#58a6ff;--elite:#2ea043;--clean:#1f6feb;--flagged:#d29922;--nuked:#da3633;
+  --radius:8px;--font:system-ui,'Segoe UI',sans-serif;--mono:'Cascadia Code','Fira Code',monospace}
+body{font-family:var(--font);background:var(--bg);color:var(--text);display:flex;height:100vh;overflow:hidden}
+
+/* ── Sidebar ── */
+#sidebar{width:220px;min-width:220px;background:var(--surface);border-right:1px solid var(--border);
+  display:flex;flex-direction:column;padding:0}
+.logo{padding:20px 16px 12px;font-size:1.1rem;font-weight:700;color:#f0f6fc;letter-spacing:-.02em;
+  border-bottom:1px solid var(--border)}
+.logo span{color:var(--accent)}
+nav{flex:1;padding:12px 8px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:var(--radius);
+  cursor:pointer;font-size:.88rem;color:var(--muted);transition:.15s;user-select:none}
+.nav-item:hover{background:#21262d;color:var(--text)}
+.nav-item.active{background:#21262d;color:var(--accent);font-weight:600}
+.nav-item .icon{font-size:1rem;width:20px;text-align:center}
+.sidebar-footer{padding:12px 16px;border-top:1px solid var(--border);font-size:.75rem;color:var(--muted)}
+.status-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--muted);margin-right:6px;transition:.3s}
+.status-dot.running{background:#2ea043;box-shadow:0 0 6px #2ea04388}
+.status-dot.watching{background:var(--accent)}
+
+/* ── Main ── */
+#main{flex:1;overflow-y:auto;display:flex;flex-direction:column}
+.page{display:none;flex:1;flex-direction:column;padding:28px 32px;gap:20px}
+.page.active{display:flex}
+.page-title{font-size:1.4rem;font-weight:700;color:#f0f6fc;margin-bottom:4px}
+.page-sub{font-size:.85rem;color:var(--muted)}
+
+/* ── Cards & Grid ── */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px}
+.card-title{font-size:.75rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:8px}
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+.stat{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 20px;text-align:center}
+.stat .num{font-size:2rem;font-weight:700;display:block;color:#f0f6fc}
+.stat .lbl{font-size:.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-top:2px}
+.stat.elite .num{color:var(--elite)} .stat.clean .num{color:var(--clean)}
+.stat.flagged .num{color:var(--flagged)} .stat.nuked .num{color:var(--nuked)}
+
+/* ── Buttons ── */
+.btn{display:inline-flex;align-items:center;gap:7px;padding:8px 16px;border-radius:var(--radius);
+  border:1px solid var(--border);background:#21262d;color:var(--text);cursor:pointer;
+  font-size:.85rem;font-family:var(--font);transition:.15s}
+.btn:hover{background:#30363d;border-color:#58a6ff44}
+.btn.primary{background:#238636;border-color:#2ea043;color:#fff;font-weight:600}
+.btn.primary:hover{background:#2ea043}
+.btn.primary:disabled{background:#21262d;border-color:var(--border);color:var(--muted);cursor:not-allowed}
+.btn.danger{background:#21262d;border-color:var(--nuked);color:var(--nuked)}
+.btn.danger:hover{background:#da363322}
+.btn.accent{background:#1158cc22;border-color:var(--accent);color:var(--accent)}
+.btn.sm{padding:5px 10px;font-size:.78rem}
+
+/* ── Forms ── */
+.form-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px}
+.field{display:flex;flex-direction:column;gap:5px}
+label{font-size:.75rem;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+input,select{background:#0d1117;border:1px solid var(--border);color:var(--text);
+  padding:8px 12px;border-radius:var(--radius);font-size:.88rem;font-family:var(--font);
+  width:100%;transition:.15s}
+input:focus,select:focus{outline:none;border-color:var(--accent)}
+input[type=checkbox]{width:auto}
+.toggle-row{display:flex;align-items:center;gap:10px;font-size:.88rem}
+
+/* ── Log terminal ── */
+#log-output{flex:1;min-height:320px;max-height:480px;background:#010409;border:1px solid var(--border);
+  border-radius:var(--radius);padding:14px 16px;overflow-y:auto;font-family:var(--mono);
+  font-size:.78rem;line-height:1.6;color:#8b949e}
+.log-line{white-space:pre-wrap;word-break:break-all}
+.log-line.elite{color:var(--elite)} .log-line.warn{color:var(--flagged)}
+.log-line.err{color:var(--nuked)}   .log-line.info{color:var(--accent)}
+.log-line.head{color:#f0f6fc;font-weight:700}
+
+/* ── Domain cards ── */
+.domain-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+  margin-bottom:10px;overflow:hidden}
+.domain-card-header{display:flex;align-items:center;gap:12px;padding:12px 16px;cursor:pointer;flex-wrap:wrap}
+.domain-name{font-weight:600;color:#f0f6fc;font-size:.95rem;flex:1}
+/* SCORE-CLUSTER-WIDTH-FIX: .domain-name has flex:1, so it absorbs whatever width the badge +
+   score-chips cluster ISN'T using — meaning the cluster's own left edge shifts every time verdict
+   word length or any chip's digit count changes ("$849" vs "$1,021", "CLEAN" vs "FLAGGED", etc).
+   Giving the badge a fixed min-width (real-measured: "FLAGGED" — the longest verdict — renders at
+   74px in this font/padding/weight; 78px below leaves a small buffer) makes its own footprint
+   constant regardless of which verdict fills it. */
+.badge{display:inline-block;text-align:center;min-width:78px;font-size:.68rem;padding:2px 8px;border-radius:4px;font-weight:700;color:#0d1117}
+.badge.ELITE{background:var(--elite)} .badge.CLEAN{background:var(--clean)}
+.badge.FLAGGED{background:var(--flagged)} .badge.NUKED{background:var(--nuked)}
+  .badge.timeout{background:transparent;border:1px solid var(--flagged);color:var(--flagged);font-weight:600}
+.score-chips{display:flex;gap:8px;font-size:.78rem;color:var(--muted)}
+.domain-card-body{display:none;padding:0 16px 14px;border-top:1px solid var(--border)}
+.domain-card-body.open{display:block}
+.info-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px;margin-top:12px}
+.info-cell{background:#0d1117;border-radius:6px;padding:8px 10px}
+.info-cell label{display:block;font-size:.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:2px}
+.info-cell span{font-size:.82rem}
+.audit-list{margin-top:10px;list-style:none;padding:0}
+.audit-list li{font-family:var(--mono);font-size:.73rem;color:var(--muted);padding:1px 0}
+
+/* ── Filters ── */
+.filter-bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.filter-bar input{width:200px}
+.chip{padding:4px 12px;border-radius:16px;border:1px solid var(--border);background:#21262d;
+  color:var(--muted);cursor:pointer;font-size:.78rem;transition:.15s}
+.chip.active{border-color:var(--accent);color:var(--accent);background:#58a6ff11}
+.chip.elite{border-color:var(--elite);color:var(--elite);background:#2ea04311}
+.chip.clean{border-color:var(--clean);color:var(--clean);background:#1f6feb11}
+.chip.flagged{border-color:var(--flagged);color:var(--flagged);background:#d2992211}
+.chip.nuked{border-color:var(--nuked);color:var(--nuked);background:#da363311}
+
+/* ── Next window banner ── */
+.window-banner{display:flex;align-items:center;gap:10px;padding:10px 16px;
+  background:#21262d;border-radius:var(--radius);border:1px solid var(--border);font-size:.85rem}
+.window-banner .tld{font-weight:700;color:#f0f6fc}
+.window-banner .time{color:var(--muted)}
+.window-table{width:100%;border-collapse:collapse;font-size:.82rem}
+.window-table th{text-align:left;padding:8px 10px;font-size:.7rem;text-transform:uppercase;
+  letter-spacing:.06em;color:var(--muted);border-bottom:1px solid var(--border)}
+.window-table td{padding:7px 10px;border-bottom:1px solid #21262d}
+.window-table tr.live td{color:#f0f6fc}
+.live-pill{display:inline-block;background:var(--elite);color:#0d1117;font-size:.65rem;
+  padding:1px 6px;border-radius:8px;font-weight:700;margin-left:6px}
+.run-row{cursor:pointer;transition:.15s}
+.run-row:hover td{background:#21262d}
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar{width:6px} ::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:#30363d;border-radius:3px}
+</style>
+</head>
+<body>
+
+<div id="sidebar">
+  <div class="logo">Stella<span>Snipes</span></div>
+  <nav>
+    <div class="nav-item active" data-page="dashboard"><span class="icon">📊</span>Dashboard</div>
+    <div class="nav-item" data-page="run"><span class="icon">▶</span>Run</div>
+    <div class="nav-item" data-page="results"><span class="icon">🔍</span>Results</div>
+    <div class="nav-item" data-page="scheduler"><span class="icon">⏰</span>Scheduler</div>
+    <div class="nav-item" data-page="watchlist"><span class="icon">⭐</span>Watchlist</div>
+    <div class="nav-item" data-page="settings"><span class="icon">⚙</span>Settings</div>
+  </nav>
+  <div class="sidebar-footer">
+    <span class="status-dot" id="status-dot"></span>
+    <span id="status-label">Idle</span>
+  </div>
+</div>
+
+<div id="main">
+
+  <!-- ── DASHBOARD ── -->
+  <div class="page active" id="page-dashboard">
+    <div><div class="page-title">Dashboard</div><div class="page-sub">Overview of all runs and upcoming drop windows</div></div>
+    <div class="stat-grid" id="stat-grid">
+      <div class="stat"><span class="num" id="s-runs">—</span><span class="lbl">Total Runs</span></div>
+      <div class="stat"><span class="num" id="s-domains">—</span><span class="lbl">Domains Audited</span></div>
+      <div class="stat elite"><span class="num" id="s-elite">—</span><span class="lbl">Elite Found</span></div>
+      <div class="stat"><span class="num" id="s-health">—</span><span class="lbl">Avg Health</span></div>
+      <div class="stat"><span class="num" id="s-watchlist">—</span><span class="lbl">Watchlist</span></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Next Drop Window</div>
+      <div id="next-window">Loading...</div>
+    </div>
+    <div class="card">
+      <div class="card-title" style="margin-bottom:12px">Recent Runs</div>
+      <table class="window-table" id="recent-runs-table">
+        <thead><tr><th>Run ID</th><th>Date</th><th>Domains</th><th>Elite</th><th>Clean</th><th>Flagged</th><th>Nuked</th></tr></thead>
+        <tbody id="recent-runs-body"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ── RUN ── -->
+  <div class="page" id="page-run">
+    <div><div class="page-title">Run Pipeline</div><div class="page-sub">Configure and fire a domain acquisition scan</div></div>
+    <div class="card">
+      <div class="card-title" style="margin-bottom:14px">Options</div>
+      <div class="form-grid">
+        <div class="field"><label>Scoring Mode</label>
+          <select id="run-mode"><option value="DEBLOAT">DEBLOAT (max single hit)</option><option value="BLOAT">BLOAT (sum all hits)</option></select>
+        </div>
+        <div class="field"><label>Quantity</label><input type="number" id="run-quantity" value="50" min="1" max="500"></div>
+        <div class="field"><label>File Import (optional)</label><input type="text" id="run-file" placeholder="Full path to .txt or .csv"></div>
+      </div>
+      <div style="display:flex;gap:16px;margin-top:14px;flex-wrap:wrap">
+        <div class="toggle-row"><input type="checkbox" id="run-skip2"><label for="run-skip2">Skip Module 2 (health)</label></div>
+        <div class="toggle-row"><input type="checkbox" id="run-skip3"><label for="run-skip3">Skip Module 3 (valuation)</label></div>
+        <div class="toggle-row"><input type="checkbox" id="run-watchlist"><label for="run-watchlist">Auto-watchlist elites</label></div>
+      </div>
+      <div style="margin-top:16px;display:flex;gap:10px;align-items:center">
+        <button class="btn primary" id="btn-run" onclick="startRun()">▶ Run Now</button>
+        <button class="btn" onclick="clearLog()">Clear Log</button>
+        <span id="run-timer" style="font-size:.82rem;color:var(--muted)"></span>
+      </div>
+    </div>
+    <div id="log-output"></div>
+  </div>
+
+  <!-- ── RESULTS ── -->
+  <div class="page" id="page-results">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px">
+      <div><div class="page-title">Results</div><div class="page-sub">Browse domain audit results from all runs</div></div>
+      <button class="btn sm" onclick="loadResults()">↻ Refresh</button>
+    </div>
+    <div class="card" style="padding:12px 16px">
+      <div class="filter-bar">
+        <span class="chip active" data-verdict="ALL" onclick="setVerdict('ALL',this)">All</span>
+        <span class="chip elite" data-verdict="ELITE" onclick="setVerdict('ELITE',this)">✅ Elite</span>
+        <span class="chip clean" data-verdict="CLEAN" onclick="setVerdict('CLEAN',this)">✔ Clean</span>
+        <span class="chip flagged" data-verdict="FLAGGED" onclick="setVerdict('FLAGGED',this)">⚠ Flagged</span>
+        <span class="chip nuked" data-verdict="NUKED" onclick="setVerdict('NUKED',this)">❌ Nuked</span>
+        <input type="text" placeholder="Search domain…" oninput="filterDomains(this.value)" style="margin-left:auto">
+        <select onchange="sortDomains(this.value)" style="width:150px">
+          <option value="profit">Sort: Score ↓</option>
+          <option value="health">Sort: Health ↓</option>
+          <option value="domain">Sort: Domain A-Z</option>
+        </select>
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:4px">
+      <span style="font-size:.8rem;color:var(--muted)">Run:</span>
+      <select id="run-selector" onchange="selectRun(this.value)" style="width:280px;font-size:.82rem"></select>
+    </div>
+    <div id="results-container"></div>
+  </div>
+
+  <!-- ── SCHEDULER ── -->
+  <div class="page" id="page-scheduler">
+    <div><div class="page-title">Scheduler</div><div class="page-sub">Daemon watches drop windows and fires automatically</div></div>
+    <div class="card" style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+      <div style="flex:1">
+        <div style="font-size:.88rem;color:var(--muted)">Daemon Status</div>
+        <div id="daemon-state" style="font-size:1.1rem;font-weight:700;color:#f0f6fc;margin-top:4px">—</div>
+      </div>
+      <button class="btn primary" id="btn-daemon-start" onclick="startDaemon()">▶ Start Daemon</button>
+      <button class="btn danger" id="btn-daemon-stop" onclick="stopDaemon()" style="display:none">■ Stop</button>
+    </div>
+    <div class="card">
+      <div class="card-title" style="margin-bottom:10px">Drop Windows <span style="font-weight:400;font-size:.78rem;color:var(--muted)">(all times UTC)</span></div>
+      <table class="window-table" id="window-table">
+        <thead><tr><th>TLD</th><th>Window Start</th><th>Window End</th><th>Status</th><th>Next In</th></tr></thead>
+        <tbody id="window-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ── WATCHLIST ── -->
+  <div class="page" id="page-watchlist">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px">
+      <div><div class="page-title">Watchlist</div><div class="page-sub">Domains you're tracking across runs</div></div>
+      <div style="display:flex;gap:8px">
+        <input type="text" id="wl-add-input" placeholder="domain.com" style="width:200px">
+        <button class="btn accent" onclick="addToWatchlist()">+ Add</button>
+        <button class="btn sm" id="wl-reaudit-all-btn" onclick="reauditAllWatch(this)">↻ Re-audit All</button>
+      </div>
+    </div>
+    <div id="watchlist-container"></div>
+  </div>
+
+  <!-- ── SETTINGS ── -->
+  <div class="page" id="page-settings">
+    <div><div class="page-title">Settings</div><div class="page-sub">API keys and notification config — saved to .env</div></div>
+    <div class="card">
+      <div class="card-title" style="margin-bottom:4px">ICANN CZDS — Zone File Drops <span id="czds-chip" style="display:inline-block;margin-left:8px;font-size:.7rem;padding:2px 8px;border-radius:20px;background:var(--surface2);color:var(--muted);font-weight:500">NOT SET</span></div>
+      <div style="font-size:.8rem;color:var(--muted);margin-bottom:14px">Zone-file access for approved TLDs. <a href="https://czds.icann.org" target="_blank" style="color:var(--accent)">Register free at czds.icann.org</a> → request zone access for com, net, org, info, biz → paste credentials below.</div>
+      <div class="form-grid">
+        <div class="field">
+          <label>ICANN Account Email</label>
+          <input type="text" id="s-czdu" placeholder="you@example.com">
+        </div>
+        <div class="field">
+          <label>ICANN Account Password</label>
+          <input type="password" id="s-czdp" placeholder="••••••••">
+        </div>
+        <div class="field" style="grid-column:1/-1">
+          <label>TLDs to pull <span style="color:var(--muted);font-weight:400">— comma-separated, must match approved zones</span></label>
+          <input type="text" id="s-czdt" placeholder="com,net,org,info,biz">
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title" style="margin-bottom:14px">API Keys</div>
+      <div class="form-grid">
+        <div class="field"><label>Google Safe Browsing</label><input type="password" id="s-sb" placeholder="AIza..."></div>
+        <div class="field"><label>Majestic API Key</label><input type="password" id="s-maj" placeholder="Optional"></div>
+        <div class="field"><label>GoDaddy API Key</label><input type="password" id="s-gdk" placeholder="Optional"></div>
+        <div class="field"><label>GoDaddy API Secret</label><input type="password" id="s-gds" placeholder="Optional"></div>
+        <div class="field"><label>Namecheap API Key</label><input type="password" id="s-nck" placeholder="Optional"></div>
+        <div class="field"><label>Namecheap Username</label><input type="text" id="s-ncu" placeholder="Optional"></div>
+        <div class="field"><label>Namecheap Client IP</label><input type="text" id="s-ncip" placeholder="Your public IP"></div>
+      </div>
+      <div class="toggle-row" style="margin-top:12px"><input type="checkbox" id="s-privacy" checked><label for="s-privacy">WHOIS Privacy (recommended)</label></div>
+    </div>
+    <div class="card">
+      <div class="card-title" style="margin-bottom:14px">Email Alerts (SMTP)</div>
+      <div class="form-grid">
+        <div class="field"><label>SMTP Host</label><input type="text" id="s-sh" placeholder="smtp.gmail.com"></div>
+        <div class="field"><label>SMTP Port</label><input type="number" id="s-sp" placeholder="587"></div>
+        <div class="field"><label>SMTP User</label><input type="email" id="s-su" placeholder="you@gmail.com"></div>
+        <div class="field"><label>SMTP Password / App Password</label><input type="password" id="s-spw" placeholder="App password"></div>
+        <div class="field"><label>Alert To (email)</label><input type="email" id="s-at" placeholder="alerts@example.com"></div>
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;align-items:center">
+      <button class="btn primary" onclick="saveSettings()">💾 Save Settings</button>
+      <span id="settings-msg" style="font-size:.82rem;color:var(--muted)"></span>
+    </div>
+    <div class="card">
+      <div class="card-title" style="margin-bottom:10px">Configured Services</div>
+      <div id="service-status" style="display:flex;gap:10px;flex-wrap:wrap"></div>
+    </div>
+  </div>
+
+</div><!-- /main -->
+
+<script>
+// ── WebSocket ─────────────────────────────────────────────────────────────────
+let ws, wsReconnectTimer;
+
+function connectWs() {
+  ws = new WebSocket(`ws://${location.host}`);
+  ws.onmessage = ({ data }) => {
+    try { handleWsMsg(JSON.parse(data)); } catch {}
+  };
+  ws.onclose = () => { wsReconnectTimer = setTimeout(connectWs, 3000); };
+}
+
+function handleWsMsg({ type, payload }) {
+  if (type === 'log')           appendLog(payload);
+  if (type === 'run_state')     setRunState(payload.running);
+  if (type === 'run_complete')  onRunComplete(payload);
+  if (type === 'scheduler_state') updateDaemonUi(payload);
+}
+
+// ── Navigation ────────────────────────────────────────────────────────────────
+document.querySelectorAll('.nav-item').forEach(el => {
+  el.onclick = () => {
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    el.classList.add('active');
+    document.getElementById('page-' + el.dataset.page).classList.add('active');
+    if (el.dataset.page === 'dashboard')  loadDashboard();
+    if (el.dataset.page === 'results')    loadResults();
+    if (el.dataset.page === 'scheduler')  loadScheduler();
+    if (el.dataset.page === 'watchlist')  loadWatchlist();
+    if (el.dataset.page === 'settings')   loadSettings();
+  };
+});
+
+// ── Dashboard ─────────────────────────────────────────────────────────────────
+async function loadDashboard() {
+  const [stats, runs, windows] = await Promise.all([
+    api('/api/stats'), api('/api/runs?limit=10'), api('/api/dropwindows')
+  ]);
+  document.getElementById('s-runs').textContent      = stats?.total_runs ?? '—';
+  document.getElementById('s-domains').textContent   = stats?.total_domains ?? '—';
+  document.getElementById('s-elite').textContent     = stats?.elite_found ?? '—';
+  document.getElementById('s-health').textContent    = stats?.avg_health ? stats.avg_health + '/100' : '—';
+  document.getElementById('s-watchlist').textContent = stats?.watchlist_count ?? '—';
+
+  // Next window
+  const live    = (windows||[]).filter(w => w.active);
+  const upcoming= (windows||[]).filter(w => !w.active).slice(0,1);
+  const nwEl    = document.getElementById('next-window');
+  if (live.length) {
+    nwEl.innerHTML = live.map(w => `<div class="window-banner"><span class="tld">.${w.tld}</span><span class="live-pill">LIVE</span><span class="time">${w.start} – ${w.end}</span></div>`).join('');
+  } else if (upcoming.length) {
+    const w = upcoming[0];
+    nwEl.innerHTML = `<div class="window-banner"><span class="tld">.${w.tld}</span><span class="time">in ~${w.minsAway} min  (${w.start} – ${w.end})</span></div>`;
+  } else {
+    nwEl.innerHTML = '<span style="color:var(--muted);font-size:.85rem">No drop windows configured</span>';
+  }
+
+  // Recent runs
+  const tbody = document.getElementById('recent-runs-body');
+  tbody.innerHTML = (runs||[]).slice(0,8).map(r => `
+    <tr class="run-row" onclick="goToRun('${r.run_ts}')">
+      <td style="font-family:var(--mono);font-size:.78rem">${r.run_ts}</td>
+      <td>${r.started_at ? r.started_at.slice(0,16).replace('T',' ') : '—'}</td>
+      <td>${r.total_domains ?? r.domains_scored ?? '—'}</td>
+      <td style="color:var(--elite)">${r.elite_count ?? '—'}</td>
+      <td style="color:var(--clean)">${r.clean_count ?? '—'}</td>
+      <td style="color:var(--flagged)">${r.flagged_count ?? '—'}</td>
+      <td style="color:var(--nuked)">${r.nuked_count ?? '—'}</td>
+    </tr>`).join('') || '<tr><td colspan="7" style="color:var(--muted);padding:12px">No runs yet</td></tr>';
+}
+
+function goToRun(runTs) {
+  document.querySelector('[data-page=results]').click();
+  setTimeout(() => selectRun(runTs), 200);
+}
+
+// ── Run ───────────────────────────────────────────────────────────────────────
+let _runStart, _timerInterval;
+
+async function startRun() {
+  if (document.getElementById('btn-run').disabled) return;
+  clearLog();
+  setRunState(true);
+  _runStart = Date.now();
+  _timerInterval = setInterval(() => {
+    const s = Math.floor((Date.now()-_runStart)/1000);
+    document.getElementById('run-timer').textContent = `${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`;
+  }, 1000);
+
+  await api('/api/run', 'POST', {
+    mode          : document.getElementById('run-mode').value,
+    quantity      : +document.getElementById('run-quantity').value,
+    skipModule2   : document.getElementById('run-skip2').checked,
+    skipModule3   : document.getElementById('run-skip3').checked,
+    watchlistElites: document.getElementById('run-watchlist').checked,
+    fileInput     : document.getElementById('run-file').value || null,
+  });
+}
+
+function onRunComplete(payload) {
+  clearInterval(_timerInterval);
+  appendLog(`\n✅ Run complete — ELITE:${payload.elite} CLEAN:${payload.clean} FLAGGED:${payload.flagged} NUKED:${payload.nuked}`, 'elite');
+}
+
+function setRunState(running) {
+  const btn = document.getElementById('btn-run');
+  btn.disabled = running;
+  btn.textContent = running ? '⏳ Running…' : '▶ Run Now';
+  const dot = document.getElementById('status-dot');
+  const lbl = document.getElementById('status-label');
+  dot.className  = 'status-dot' + (running ? ' running' : '');
+  lbl.textContent = running ? 'Running…' : 'Idle';
+  if (!running) clearInterval(_timerInterval);
+}
+
+function appendLog(msg, cls='') {
+  const el   = document.getElementById('log-output');
+  const line = document.createElement('div');
+  line.className = 'log-line' + (cls ? ' '+cls : '');
+  if (!cls) {
+    if (msg.includes('ELITE') || msg.includes('✅'))    cls = 'elite';
+    else if (msg.includes('[!]') || msg.includes('!!')) cls = 'err';
+    else if (msg.includes('[~]') || msg.includes('[M2]'))cls = 'info';
+    else if (msg.includes('==='))                        cls = 'head';
+    line.className = 'log-line ' + cls;
+  }
+  line.textContent = msg;
+  el.appendChild(line);
+  el.scrollTop = el.scrollHeight;
+}
+
+function clearLog() { document.getElementById('log-output').innerHTML = ''; }
+
+// ── Results ───────────────────────────────────────────────────────────────────
+let _allDomains = [], _activeVerdict = 'ALL', _searchQ = '';
+
+async function loadResults() {
+  const runs = await api('/api/runs');
+  const sel  = document.getElementById('run-selector');
+  const prev = sel.value;
+  sel.innerHTML = (runs||[]).map(r =>
+    `<option value="${r.run_ts}">${r.run_ts.replace(/-/g,' ')} (${r.elite_count||0}E ${r.clean_count||0}C)</option>`
+  ).join('') || '<option>No runs</option>';
+  if (prev && [...sel.options].some(o => o.value===prev)) sel.value=prev;
+  if (sel.value) await selectRun(sel.value);
+}
+
+async function selectRun(runTs) {
+  if (!runTs) return;
+  document.getElementById('run-selector').value = runTs;
+  const domains = await api(`/api/runs/${encodeURIComponent(runTs)}`);
+  _allDomains = domains || [];
+  defaultSortResults();
+  renderDomains();
+}
+
+function setVerdict(v, el) {
+  _activeVerdict = v;
+  document.querySelectorAll('[data-verdict]').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  renderDomains();
+}
+
+function filterDomains(q) { _searchQ = q.toLowerCase(); renderDomains(); }
+
+// FEAT-2: one consistent 'best money first' order — stars first, then lead-gen value (lg_profit).
+// Matches the watch rolodex so the two pages agree.
+function defaultSortResults() {
+  _allDomains.sort((a,b) =>
+    ((b.is_star||0) - (a.is_star||0)) ||
+    ((b.lg_profit ?? b.profit_score ?? 0) - (a.lg_profit ?? a.profit_score ?? 0)));
+}
+function sortDomains(field) {
+  if (field === 'profit') defaultSortResults();
+  if (field === 'health') _allDomains.sort((a,b) => (b.health_score||0)-(a.health_score||0));
+  if (field === 'domain') _allDomains.sort((a,b) => a.domain.localeCompare(b.domain));
+  renderDomains();
+}
+
+function renderDomains() {
+  const filtered = _allDomains.filter(d =>
+    (_activeVerdict === 'ALL' || d.verdict === _activeVerdict) &&
+    (!_searchQ || d.domain.includes(_searchQ))
+  );
+  const el = document.getElementById('results-container');
+  if (!filtered.length) { el.innerHTML = '<div style="color:var(--muted);padding:20px">No domains match current filters.</div>'; return; }
+  el.innerHTML = filtered.map(d => domainCard(d)).join('');
+}
+
+function domainCard(d) {
+  const dom = esc(d.domain);
+  let vjson=null; try { vjson = d.valuation_json ? JSON.parse(d.valuation_json) : null; } catch {}
+  const recoup = (vjson && vjson.est_monthly_recoup!=null) ? vjson.est_monthly_recoup : (d.est_mid!=null ? d.est_mid : null);
+  const vin = vjson && vjson.inputs;
+  const rng = vjson && vjson.recoup_range;
+  const $ = n => '$'+Math.round(n).toLocaleString();
+  const proxyTip = vjson && vjson.assumptions ? esc(vjson.assumptions.note) : 'Population-proxy estimate.';
+  const calls = vin && vin.est_calls_billable!=null ? vin.est_calls_billable : (vin ? vin.est_calls : null);
+  const val = recoup!=null
+    ? `<span title="${proxyTip}">${rng ? `${$(rng.low)}\u2013${$(rng.high)}/mo <span style="color:var(--muted)">(est \u00b7 mid ${$(rng.mid)})</span>` : `~${$(recoup)}/mo <span style="color:var(--muted)">(est)</span>`}`
+      + `${vin ? ` <span style="color:var(--muted)">\u00b7 ~${calls} billable calls/mo \u00b7 pop ${Number(vin.population).toLocaleString()}${vin.population_known===false?' (default)':''} \u00b7 ${esc(vin.tier)}</span>` : ''}`
+      + ` <span style="color:var(--muted)" title="${proxyTip}">\u24d8 proxy</span></span>`
+    : '\u2014';
+  // HONEST tri-state — null/undefined = not checked = "—". Never assert "Clean" from absence.
+  const avail   = d.available==1 ? '✓ Available' : d.available==0 ? '✗ Registered' : '—';
+  // RDAP-DROP-TIMER-FIX: the top-of-card "⏳ drops in Xd" indicator only shows on the Watchlist
+  // page, above the fold — a person scrolled into a card's detail grid had to scroll back up to
+  // see it. Same drop-countdown logic (dropCountdownText), same underlying est_drop_date/
+  // watch_status fields, just also rendered right inside the RDAP box itself.
+  const dropTxt = dropCountdownText(d);
+  const availWithDrop = avail + (dropTxt ? ` · ${dropTxt}` : '');
+  const dns     = d.dns_resolves==1 ? 'Live/Redemption' : d.dns_resolves==0 ? '✓ Dropped' : '—';
+  // Parsed once, reused below for Blacklists (BLACKLIST-HONESTY-FIX) and Authority
+  // (MAJESTIC-LABEL-HONESTY-FIX) — both need to tell "genuinely checked" apart from "no data".
+  let checkStatus = {}; try { checkStatus = d.check_status_json ? JSON.parse(d.check_status_json) : {}; } catch {}
+  // A successful blacklist check with no listed result is a verified clean result.
+  // Resolver failures remain distinct from a completed negative lookup.
+  const bl      = d.blacklisted_on ? '✗ Fail — '+esc(d.blacklisted_on)
+                : checkStatus.blacklists === 'ok' ? '✓ Pass'
+                : '— Unchecked';
+  const content = d.content_flagged==1 ? '⚠ Flagged' : d.content_flagged==0 ? '✓ Clean' : '—';
+  const sb      = (d.safe_browsing_ok===0||d.safe_browsing_ok===false) ? '⚠ Flagged'
+                : (d.safe_browsing_ok===1||d.safe_browsing_ok===true) ? '✓ Clean' : '—';
+  // ARCHIVE-STATUS-HONESTY-FIX: snapshot_count defaults to 0 whether Wayback genuinely found
+  // nothing (a confirmed negative fact) OR its history fetch failed/was rate-limited/timed out
+  // (we simply don't know). Those used to collapse into the same "No history" text. check_status.
+  // wayback is 'ok' only when the check itself succeeded (see inspectWayback -> history_status),
+  // so it distinguishes a real zero from a check that never got an answer.
+  const archive = d.first_seen ? `${d.first_seen} → ${d.last_seen} · ${d.snapshot_count} snaps · ${d.age_years_wayback ?? '?'}y`
+                : checkStatus.wayback === 'ok' ? 'No history found'
+                : (checkStatus.wayback === 'failed' || checkStatus.wayback === 'rate_limited') ? "couldn't check — try again"
+                : '—';
+  const whois   = d.whois_created ? `${d.whois_created} (${d.age_years_whois ?? '?'}y)` : '—';
+  // MAJESTIC-LABEL-HONESTY-FIX: "no source" used to mean two different things a human can't tell
+  // apart — "we don't subscribe to Majestic" (permanent, structural) or "the check failed/was
+  // rate-limited this run" (temporary, will retry on its own). Now three-way, using the actual
+  // per-check status persisted alongside the run (RATE-LIMIT-VS-FAILURE-FIX). checkStatus parsed
+  // once above, next to Blacklists.
+  const authority = (d.trust_flow!=null) ? `TF ${d.trust_flow}`
+                  : (checkStatus.majestic === 'not_applicable') ? 'Needs Majestic'
+                  : (checkStatus.majestic === 'rate_limited' || checkStatus.majestic === 'failed') ? "couldn't check — retrying"
+                  : 'no source';
+  // BACKLINKS-VIA-MAJESTIC-FIX: this used to be "Indexed Pages" driven by CommonCrawl's own-
+  // subdomain crawl-footprint count (d.referring_domains) — a technically-real but worthless
+  // number that read 0 for literally every domain on the watchlist. Replaced with a real backlink
+  // count sourced from Majestic (d.ref_domains — distinct referring domains), using the identical
+  // three-way honesty pattern as Authority (TF) right above: real count / "Needs Majestic" (no key
+  // configured, permanent) / "couldn't check — retrying" (key configured but this run failed or
+  // was rate-limited, temporary).
+  const backlinks = (d.ref_domains!=null) ? `${d.ref_domains} referring domains`
+                  : (checkStatus.majestic === 'not_applicable') ? 'Needs Majestic'
+                  : (checkStatus.majestic === 'rate_limited' || checkStatus.majestic === 'failed') ? "couldn't check — retrying"
+                  : 'no source';
+  // MARKETPLACE-DATA-PERSIST-FIX: marketplace_price/status/source are generic, source-agnostic
+  // columns (a second marketplace source shares them rather than getting its own parallel set —
+  // see store.js migration comment). Same three/four-way honesty pattern as Backlinks/Authority
+  // above: a genuine result (auction/appraised/no listing) reads distinctly from an 'error' state
+  // (403/429/5xx — see GODADDY-STATUS-HONESTY-FIX) and from "nothing configured" (no source at
+  // all, marketplace_source null). The (source) tag is shown whenever we have one, so a second
+  // provider added later is never mistaken for this one.
+  const mktPrice = d.marketplace_price!=null ? '$'+Math.round(d.marketplace_price).toLocaleString() : null;
+  const mktTag = d.marketplace_source ? ` <span style="color:var(--muted)">(${esc(d.marketplace_source)})</span>` : '';
+  const marketplace = (d.marketplace_status === 'auction' ? `🔨 Auction${mktPrice?': '+mktPrice:''}`
+                     : d.marketplace_status === 'appraised' ? `Appraised${mktPrice?': '+mktPrice:''}`
+                     : d.marketplace_status === 'no_listing' ? 'No listing'
+                     : d.marketplace_status === 'error' ? "couldn't check — retrying"
+                     : 'not checked') + mktTag;
+  const F = (label,html,key)=>`<div class="info-cell" style="cursor:pointer" onclick="openEvidence('${dom}','${key}')" title="Click to inspect the raw evidence behind this number"><label>${label} 🔍</label><span>${html}</span></div>`;
+  return `<div class="domain-card" data-verdict="${d.verdict||''}" data-domain="${dom}">
+    <div class="domain-card-header" onclick="toggleCard(this)">
+      <span class="domain-name">${d.is_star?'<span title="★ passed M1+M2+M3" style="color:#f0b429">★</span> ':''}${dom}</span>
+      <span class="badge ${d.verdict||''}" ${(d.audit_reason && (d.verdict==='FLAGGED'||d.verdict==='NUKED'))?`title="${esc(d.audit_reason)}" style="cursor:help"`:''}>${d.verdict||'—'}${(d.audit_reason && (d.verdict==='FLAGGED'||d.verdict==='NUKED'))?' \u24d8':''}</span>
+      ${d.timed_out?'<span class="badge timeout" title="Health check timed out — could not verify. Retry.">⏱ timed out — retry</span>':''}
+      ${d.renewal_flagged==1?`<span class="badge" style="background:#7a5b00;color:#ffd98a" title="${esc(renewalProofText(d))}">⚠ renewal-flagged — confirm</span>`:''}
+      <!-- Fixed-width, right-aligned numeric slots keep the score cluster aligned as values change.
+           The estimate slot remains visible when no estimate is available, preventing layout shifts. -->
+      <span class="score-chips">
+        <span>Health <b style="display:inline-block;min-width:30px;text-align:right;font-variant-numeric:tabular-nums;color:#f0f6fc">${d.health_score??'—'}</b>/100</span>
+        <span>Score <b style="display:inline-block;min-width:44px;text-align:right;font-variant-numeric:tabular-nums;color:#f0f6fc">${d.lg_profit!=null?d.lg_profit.toFixed(1):'—'}</b></span>
+        <span>Estimate <b style="display:inline-block;min-width:54px;text-align:right;font-variant-numeric:tabular-nums;color:#f0f6fc">${d.est_mid?'$'+Math.round(d.est_mid).toLocaleString():'—'}</b></span>
+      </span>
+    </div>
+    <div class="domain-card-body">
+      <div class="info-grid">
+        ${F('RDAP',availWithDrop,'rdap')}
+        ${F('DNS',dns,'dns')}
+        ${F('Archive',archive,'wayback')}
+        ${F('WHOIS',whois,'whois')}
+        ${F('Backlinks',backlinks,'majestic')}
+        ${F('Authority (TF)',authority,'majestic')}
+        ${F('Marketplace',marketplace,'marketplace')}
+        ${F('Blacklists',bl,'blacklists')}
+        ${F('Content',content,'content')}
+        ${F('Safe Browsing',sb,'safebrowsing')}
+        <div class="info-cell" style="grid-column:1/-1;cursor:pointer" onclick="openEvidence('${dom}','valuation')" title="Click to inspect"><label>Estimated Recoup 🔍</label><span>${val}</span></div>
+      </div>
+      <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn sm accent" onclick="reauditCard('${dom}',this)">↻ Re-audit</button>
+        <button class="btn sm" onclick="openEvidence('${dom}')">🔍 Inspect</button>
+        <button class="btn sm" onclick="watchlistDomain('${dom}')">⭐ Watch</button>
+        ${d.renewal_flagged==1?`<button class="btn sm" onclick="keepWatchCard('${dom}',this)" title="Dismiss the renewal flag and keep watching">✓ Keep watching</button>`:''}
+        <button class="btn sm danger" onclick="deleteWatchCard('${dom}',this)">🗑 Delete</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function toggleCard(header) { header.nextElementSibling.classList.toggle('open'); }
+
+// ── Evidence drill-down (P1) — every field opens the RAW records from /api/evidence/:domain ──
+function _evModal() {
+  let m = document.getElementById('ev-modal');
+  if (m) return m;
+  m = document.createElement('div');
+  m.id = 'ev-modal';
+  m.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:1000;display:none;align-items:flex-start;justify-content:center;overflow:auto;padding:40px 12px';
+  m.innerHTML = '<div id="ev-panel" style="background:#0d1117;border:1px solid #30363d;border-radius:12px;max-width:820px;width:100%;padding:20px;color:#c9d1d9;font-size:.85rem"></div>';
+  m.onclick = e => { if (e.target === m) m.style.display='none'; };
+  document.body.appendChild(m);
+  return m;
+}
+function _link(href,text){ return `<a href="${href}" target="_blank" rel="noopener" style="color:#58a6ff">${esc(text)}</a>`; }
+function _sec(title,body){ return `<div style="margin:14px 0;padding-top:12px;border-top:1px solid #21262d"><div style="font-weight:600;color:#f0f6fc;margin-bottom:6px">${title}</div>${body}</div>`; }
+
+async function openEvidence(domain, focus) {
+  const m = _evModal(); const panel = m.querySelector('#ev-panel');
+  panel.innerHTML = `<div style="color:#8b949e">Loading evidence for ${esc(domain)}…</div>`;
+  m.style.display = 'flex';
+  const data = await api('/api/evidence/'+encodeURIComponent(domain));
+  panel.innerHTML = renderEvidence(domain, data && data.evidence, data && data.captured_at, focus);
+}
+
+function renderEvidence(domain, ev, capturedAt, focus) {
+  const head = `<div style="display:flex;justify-content:space-between;align-items:center">
+      <div style="font-size:1.05rem;font-weight:700;color:#f0f6fc">${esc(domain)} — raw evidence</div>
+      <button class="btn sm" onclick="document.getElementById('ev-modal').style.display='none'">✕ Close</button>
+    </div>
+    <div style="color:#8b949e;font-size:.75rem;margin-top:2px">${ev?('audited '+esc(capturedAt||'')):'not audited yet — nothing to show'}</div>`;
+  if (!ev) return head + _sec('No evidence','This domain has not been audited yet. Use ↻ Re-audit to run the full audit and capture evidence.');
+  const dash = '<span style="color:#8b949e">—</span>';
+  let out = head;
+
+  // ARCHIVE — every Wayback capture, linked to the archived page
+  const wb = ev.wayback || {};
+  if (Array.isArray(wb.timestamps) && wb.timestamps.length) {
+    const caps = wb.timestamps.slice(0,60).map(ts => _link(`https://web.archive.org/web/${ts}/${domain}`, ts)).join(' · ');
+    out += _sec('ARCHIVE (Wayback)', `${wb.snapshot_count} captures · ${esc(wb.first_seen||'?')} → ${esc(wb.last_seen||'?')}<br>${caps}${wb.timestamps.length>60?` … (+${wb.timestamps.length-60} more)`:''}${wb.closest_snapshot_url?'<br>closest: '+_link(wb.closest_snapshot_url,wb.closest_snapshot_url):''}`);
+  } else out += _sec('ARCHIVE (Wayback)', dash);
+
+  // RDAP raw
+  const r = ev.rdap;
+  out += _sec('RDAP', r ? `status ${r.status_code ?? '—'} · available ${String(r.available)} · server ${esc(r.server||'—')}` : dash);
+
+  // WHOIS raw record
+  const w = ev.whois;
+  out += _sec('WHOIS', w ? `<pre style="white-space:pre-wrap;background:#161b22;padding:8px;border-radius:6px;margin:0">${esc(JSON.stringify(w.raw||{created:w.created}, null, 2))}</pre>` : dash);
+
+  // BLACKLISTS — each list + its actual answer
+  const b = ev.blacklists;
+  if (b && Array.isArray(b.lists) && b.lists.length) {
+    out += _sec('BLACKLISTS', b.lists.map(l => `${esc(l.name)}: <b>${esc(l.state)}</b> ${l.answer?`(${esc(String(l.answer))})`:''} <span style="color:#8b949e">${esc(l.host)}</span>`).join('<br>'));
+  } else out += _sec('BLACKLISTS', dash);
+
+  // CONTENT — terms screened
+  out += _sec('CONTENT', (wb.content_terms && wb.content_terms.length) ? '⚠ matched: '+wb.content_terms.map(esc).join(', ') : (wb.content_screen_status==='screened'?'✓ screened, clean':`${dash} (${esc(wb.content_screen_status||'not screened')})`));
+
+  // BACKLINKS — COMMONCRAWL-RELIABILITY-DECISION: the old "Indexed pages (CommonCrawl...)" section
+  // here is gone along with the check itself (index.commoncrawl.org confirmed unreachable — see
+  // health.js's removal note). Authority/backlinks are exclusively Majestic now.
+  const mj = ev.majestic;
+  let blHtml = `<div style="color:#8b949e">Inbound-link authority (Majestic):</div>`;
+  blHtml += (mj && mj.trust_flow!=null)
+    // BACKLINKS-VIA-MAJESTIC-FIX: ref_domains/ext_backlinks are the real backlink COUNT (see the
+    // Backlinks info-cell above); Trust/Citation Flow are the separate 0-100 authority SCORE. Both
+    // come from the same Majestic response, shown together here.
+    ? `${mj.ref_domains!=null ? `<b>${mj.ref_domains}</b> referring domains / ${mj.ext_backlinks ?? '—'} raw backlinks<br>` : ''}Majestic Trust Flow <b>${mj.trust_flow}</b> / Citation Flow ${mj.citation_flow ?? '—'} <span style="color:#8b949e">(authority score, 0-100)</span>`
+    : `<span style="color:#d29922">No backlink source configured — add a Majestic key to see real backlink counts and score inbound-link authority.</span>`;
+  out += _sec('BACKLINKS / AUTHORITY', blHtml);
+
+  // MARKETPLACE — MARKETPLACE-DATA-PERSIST-FIX: ev.marketplace is the raw gd object (godaddy.js's
+  // enrichDomains() result) saved verbatim into the evidence blob at saveEvidence() time. Distinct
+  // rendering for each of the four honest states: real auction, real appraisal, genuine "no
+  // listing found" negative, and the GODADDY-STATUS-HONESTY-FIX error shape (auth/rate-limit/
+  // server error) — an error must never look like a quiet "no listing".
+  const mk = ev.marketplace;
+  let mkHtml;
+  if (!mk) {
+    mkHtml = `<span style="color:#8b949e">No marketplace source configured.</span>`;
+  } else if (mk.error) {
+    // MARKETPLACE-DRILLDOWN-ERROR-FIELD-FIX: the evidence blob nests kind/status under mk.error
+    // ({status, kind}) — mk.error itself is just the truthy marker, not the payload. Reading
+    // mk.kind/mk.status (one level too shallow) silently fell through every ternary branch to
+    // 'server error' and printed "HTTP undefined", since neither field exists at that level.
+    const kindText = mk.error.kind === 'auth' ? 'authentication failed (bad/expired key)'
+                    : mk.error.kind === 'rate_limit' ? 'rate-limited'
+                    : 'server error';
+    mkHtml = `<span style="color:#d29922">⚠ couldn't check — ${esc(kindText)} (HTTP ${mk.error.status}). Not a real "no listing" answer — retry.</span>`;
+  } else if (mk.auction) {
+    const a = mk.auction;
+    const timeLeft = a.time_left!=null ? `${Math.round(a.time_left/3600)}h left` : 'time left unknown';
+    mkHtml = `🔨 <b>In auction</b> — current bid <b>$${a.current_bid!=null?Number(a.current_bid).toLocaleString():'—'}</b>`
+      + `${a.bid_count!=null?` (${a.bid_count} bids)`:''} · ${esc(timeLeft)}`
+      + `${a.est_value!=null?` · estimated value $${Number(a.est_value).toLocaleString()}`:''}`
+      + `${a.listing_type?` · ${esc(a.listing_type)}`:''}`;
+  } else if (mk.appraisal) {
+    const ap = mk.appraisal;
+    const comps = (ap.comparable_sales||[]).map(c => `${esc(c.domain)} — $${Number(c.price).toLocaleString()} (${esc(c.sold||'?')})`).join('<br>');
+    mkHtml = `<b>Appraised value $${ap.est_value!=null?Number(ap.est_value).toLocaleString():'—'}</b>`
+      + (comps ? `<br><span style="color:#8b949e">Comparable sales:</span><br>${comps}` : '');
+  } else {
+    mkHtml = `<span style="color:#8b949e">No auction or appraisal listing found (genuine negative — checked, nothing there).</span>`;
+  }
+  out += _sec('MARKETPLACE', mkHtml);
+
+  // SAFE BROWSING
+  const sb = ev.safebrowsing;
+  out += _sec('SAFE BROWSING', sb ? (sb.checked ? (sb.matches && sb.matches.length ? '⚠ '+sb.matches.map(esc).join(', ') : '✓ clean') : `${dash} (${esc(sb.reason||sb.error||'not checked')})`) : dash);
+
+  // VALUATION — est. MONTHLY RECOUP, every input in the chain visible (FEAT-4)
+  const vv = ev.valuation;
+  if (vv && vv.inputs) {
+    const q = vv.inputs;
+    const total = Number(vv.est_monthly_recoup ?? vv.est_mid ?? 0).toLocaleString();
+    out += _sec('VALUATION — est. monthly recoup',
+      `<b>$${total}/mo</b> <span style="color:#8b949e">· ${esc(vv.basis||'')} · confidence ${esc(vv.confidence||'?')}</span><br>`
+      + `city <b>${esc(q.city||'—')}</b> (pop ${Number(q.population).toLocaleString()}${q.population_known?'':' — default/unknown market'}) · vertical tier <b>${esc(q.tier)}</b><br>`
+      + `<span style="color:#8b949e">population</span> ${Number(q.population).toLocaleString()}${q.population_capped?' <span style="color:#d29922">(capped — see tooltip)</span>':''} → <span style="color:#8b949e">searches/mo</span> ${Number(q.monthly_searches).toLocaleString()} → <span style="color:#8b949e">visitors</span> ${Number(q.est_visitors).toLocaleString()} → <span style="color:#8b949e">calls</span> ${q.est_calls} (@ ${Math.round(q.call_conv_rate*100)}% conv) → × <span style="color:#8b949e">$${q.lead_value}/lead</span> = <b>$${total}/mo</b>`);
+  } else out += _sec('VALUATION', dash);
+
+  return out;
+}
+
+async function reauditCard(domain, btn) {
+  if (btn){ btn.disabled=true; btn.textContent='↻ re-auditing…'; }
+  try {
+    await api('/api/reaudit/'+encodeURIComponent(domain),'POST',{});
+    if (btn && btn.closest('#watchlist-container')) await loadWatchlist(); else await loadResults();
+  }
+  catch(e){ alert('Re-audit failed: '+e.message); }
+  finally { if (btn){ btn.disabled=false; btn.textContent='↻ Re-audit'; } }
+}
+
+// WATCHLIST-REAUDIT-ALL — same disable/progress/restore pattern as reauditCard() above, just for
+// the whole watch queue in one server-side batch (refreshWatchAudits, cached checks reused so it
+// stays cheap). api() below has no client-side fetch timeout, so a large watchlist that takes a
+// while to work through won't strand this button disabled — it simply waits for the server.
+async function reauditAllWatch(btn) {
+  const n = document.querySelectorAll('#watchlist-container .domain-card').length;
+  if (btn){ btn.disabled=true; btn.textContent = n ? `↻ re-auditing ${n} domains…` : '↻ re-auditing…'; }
+  try {
+    const r = await api('/api/watch/reaudit-all','POST',{});
+    await loadWatchlist();
+    if (r && r.error) alert('Re-audit all failed: '+r.error);
+  }
+  catch(e){ alert('Re-audit all failed: '+e.message); }
+  finally { if (btn){ btn.disabled=false; btn.textContent='↻ Re-audit All'; } }
+}
+
+async function deleteWatchCard(domain, btn) {
+  if (!confirm(`Delete ${domain} from the watch queue? It won't be re-checked or re-enqueued.`)) return;
+  await api('/api/watch/'+encodeURIComponent(domain),'DELETE');
+  const card = btn && btn.closest('.domain-card'); if (card) card.remove();
+}
+
+// RENEWAL-SAFETY — human-readable proof for the renewal-flag tooltip (parsed from renewal_proof JSON).
+function renewalProofText(d) {
+  let p=null; try { p = d.renewal_proof ? JSON.parse(d.renewal_proof) : null; } catch {}
+  if (!p) return 'Reappeared in the ICANN zone — likely renewed. Confirm before removing.';
+  const line = (p.matched_line||'').trim();
+  return `Reappeared in the ICANN zone on ${p.zone_date||'?'} — likely renewed/re-registered.`
+    + (line?`\nMatched zone line: "${line}"`:'')
+    + `\nNot auto-deleted. Click "Keep watching" to dismiss, or "Delete" to confirm removal.`;
+}
+
+// RENEWAL-SAFETY — user reviewed the flag and wants to keep watching; clears it non-destructively.
+async function keepWatchCard(domain, btn) {
+  await api('/api/watch/'+encodeURIComponent(domain)+'/keep','POST',{});
+  const card = btn && btn.closest('#watchlist-container') ? btn.closest('#watchlist-container') : null;
+  await loadWatchlist();
+}
+
+async function appraiseNow(domain) {
+  const val = await api('/api/appraise','POST',{domain});
+  if (!val) return;
+  alert(`${domain}\nEst: $${val.est_low.toLocaleString()} – $${val.est_mid.toLocaleString()} – $${val.est_high.toLocaleString()}\nROI: ${val.roi_low}% – ${val.roi_high}%\nBasis: ${val.basis}\nConfidence: ${val.confidence}`);
+}
+
+async function watchlistDomain(domain) {
+  await api('/api/watch/add','POST',{domain});
+  alert(`${domain} added to the watch queue (auditing…).`);
+}
+
+// ── Scheduler ─────────────────────────────────────────────────────────────────
+async function loadScheduler() {
+  const [status, windows] = await Promise.all([api('/api/scheduler/status'), api('/api/scheduler/windows')]);
+  updateDaemonUi(status);
+  const tbody = document.getElementById('window-tbody');
+  tbody.innerHTML = (windows||[]).map(w => `
+    <tr class="${w.active?'live':''}">
+      <td><b>.${w.tld}</b>${w.active?'<span class="live-pill">LIVE</span>':''}</td>
+      <td>${w.start}</td><td>${w.end}</td>
+      <td>${w.active?'<span style="color:var(--elite)">Active</span>':'<span style="color:var(--muted)">Waiting</span>'}</td>
+      <td>${w.active?'Now':(w.minsAway<60?`${w.minsAway}m`:`${Math.floor(w.minsAway/60)}h ${w.minsAway%60}m`)}</td>
+    </tr>`).join('') || '<tr><td colspan="5" style="color:var(--muted);padding:12px">No windows configured</td></tr>';
+}
+
+function updateDaemonUi(status) {
+  if (!status) return;
+  const running = status.running;
+  document.getElementById('daemon-state').textContent = running
+    ? (status.state==='running'?'⚡ Firing pipeline…':'👁 Watching for drops')
+    : 'Idle';
+  document.getElementById('btn-daemon-start').style.display = running ? 'none' : '';
+  document.getElementById('btn-daemon-stop').style.display  = running ? '' : 'none';
+  const dot = document.getElementById('status-dot');
+  dot.className = 'status-dot' + (running ? ' watching' : '');
+}
+
+async function startDaemon() {
+  await api('/api/scheduler/start','POST',{
+    mode:document.getElementById('run-mode')?.value||'DEBLOAT',
+    watchlistElites:true,
+  });
+  loadScheduler();
+}
+
+async function stopDaemon() { await api('/api/scheduler/stop','POST',{}); loadScheduler(); }
+
+// RDAP-DROP-TIMER-FIX: shared drop-countdown logic — the single source of truth for "how long
+// until this domain drops", reused both at the top of the watchlist card (below) and inside the
+// RDAP info-cell in domainCard() so the two never disagree or drift out of sync with each other.
+// DROP-TIMER-LAYOUT-FIX: the leading icon (⏳/●) used to be a bare emoji character with no fixed-
+// width container, so glyph-width variance across rows (and across "⏳"/"●"/nothing) shifted where
+// the label text after it started — the "jagged left edge" down the watchlist. Wrap the icon in its
+// own fixed-width inline-block span so every row's label text starts at the identical x-offset
+// regardless of which icon (or none) precedes it. Day-count digits also use tabular-nums so a
+// 1-digit vs 2-digit vs 3-digit count can't shift the glyph width of the digits themselves.
+function dropCountdownText(d) {
+  const days = d.est_drop_date ? Math.round((new Date(d.est_drop_date) - new Date()) / 86400000) : null;
+  const icon = (glyph) => `<span class="drop-icon" style="display:inline-block;width:1.1em;text-align:center;margin-right:3px">${glyph}</span>`;
+  const num  = (n) => `<span style="font-variant-numeric:tabular-nums">${n}</span>`;
+  if (d.watch_status === 'available') return `<span style="color:#3fb950">${icon('●')}available now</span>`;
+  if (days == null) return '';
+  if (days < 0)   return `${icon('⏳')}${num(-days)}d overdue`;
+  if (days === 0) return `${icon('⏳')}drops today`;
+  return `${icon('⏳')}drops in ${num(days)}d`;
+}
+
+// ── Watchlist ─────────────────────────────────────────────────────────────────
+async function loadWatchlist() {
+  // FEAT-3: the watch page renders the SAME rich audited cards as results, driven by the drop_watch
+  // rolodex (audited winners) — verdict, monthly-recoup, every field clickable, re-audit + delete.
+  const list = await api('/api/watch/rich');
+  const el = document.getElementById('watchlist-container');
+  if (!list?.length) { el.innerHTML = '<div style="color:var(--muted);padding:20px">Watch queue is empty. Winners are added automatically each run; you can also add a domain above.</div>'; return; }
+  el.innerHTML = list.map(w => {
+    const drop = dropCountdownText(w);
+    // DROP-TIMER-LAYOUT-FIX: explicit line-height (was relying on the emoji's own natural line-
+    // height, which varies by font/rendering) and a clean explicit bottom gap (was a `-2px`
+    // negative-margin hack guessing at how much to pull the label up into the card below it).
+    return `<div style="margin:10px 0 4px;line-height:16px;font-size:.72rem;color:var(--muted);padding-left:4px">${drop}</div>` + domainCard(w);
+  }).join('');
+}
+
+async function addToWatchlist() {
+  const inp = document.getElementById('wl-add-input');
+  const d = inp.value.trim();
+  if (!d) return;
+  inp.value = '';
+  await api('/api/watch/add','POST',{domain:d});   // add to the watch queue AND audit it
+  loadWatchlist();
+}
+
+// ── Settings ──────────────────────────────────────────────────────────────────
+async function loadSettings() {
+  const cfg = await api('/api/settings');
+  if (!cfg) return;
+  document.getElementById('s-czdu').value        = cfg.CZDS_USERNAME || '';
+  document.getElementById('s-czdp').placeholder = cfg.CZDS_PASSWORD ? '••••••••' : 'Not set';
+  document.getElementById('s-czdt').value        = cfg.CZDS_TLDS || '';
+  const czdsChip = document.getElementById('czds-chip');
+  if (cfg._configured?.czds) { czdsChip.textContent='✓ ACTIVE'; czdsChip.style.background='var(--elite)'; czdsChip.style.color='#000'; }
+  document.getElementById('s-sb').placeholder   = cfg.GOOGLE_SAFE_BROWSING_API_KEY || 'Not set';
+  document.getElementById('s-maj').placeholder  = cfg.MAJESTIC_API_KEY || 'Not set';
+  document.getElementById('s-gdk').placeholder  = cfg.GODADDY_API_KEY || 'Not set';
+  document.getElementById('s-gds').placeholder  = cfg.GODADDY_API_SECRET || 'Not set';
+  document.getElementById('s-privacy').checked  = cfg.WHOIS_PRIVACY !== 'false';
+  document.getElementById('s-nck').placeholder  = cfg.NAMECHEAP_API_KEY || 'Not set';
+  document.getElementById('s-ncu').value        = cfg.NAMECHEAP_USERNAME || '';
+  document.getElementById('s-ncip').value       = cfg.NAMECHEAP_CLIENT_IP || '';
+  document.getElementById('s-sh').value         = cfg.SMTP_HOST || 'smtp.gmail.com';
+  document.getElementById('s-sp').value         = cfg.SMTP_PORT || '587';
+  document.getElementById('s-su').value         = cfg.SMTP_USER || '';
+  document.getElementById('s-at').value         = cfg.ALERT_TO || '';
+
+  const c = cfg._configured || {};
+  document.getElementById('service-status').innerHTML = [
+    ['CZDS', c.czds],
+    ['Safe Browsing',         c.safebrowsing],
+    ['Majestic',              c.majestic],
+    ['GoDaddy',               c.godaddy],
+    ['Namecheap',             c.namecheap],
+    ['Email Alerts',          c.email],
+  ].map(([name, ok]) => `<span class="chip ${ok?'elite':'nuked'}">${ok?'✓':'✗'} ${name}</span>`).join('');
+}
+
+async function saveSettings() {
+  const body = {
+    CZDS_USERNAME               : document.getElementById('s-czdu').value,
+    CZDS_PASSWORD               : document.getElementById('s-czdp').value,
+    CZDS_TLDS                   : document.getElementById('s-czdt').value,
+    GOOGLE_SAFE_BROWSING_API_KEY: document.getElementById('s-sb').value,
+    MAJESTIC_API_KEY            : document.getElementById('s-maj').value,
+    GODADDY_API_KEY             : document.getElementById('s-gdk').value,
+    GODADDY_API_SECRET          : document.getElementById('s-gds').value,
+    WHOIS_PRIVACY               : document.getElementById('s-privacy').checked ? 'true' : 'false',
+    NAMECHEAP_API_KEY           : document.getElementById('s-nck').value,
+    NAMECHEAP_USERNAME          : document.getElementById('s-ncu').value,
+    NAMECHEAP_CLIENT_IP         : document.getElementById('s-ncip').value,
+    SMTP_HOST                   : document.getElementById('s-sh').value,
+    SMTP_PORT                   : document.getElementById('s-sp').value,
+    SMTP_USER                   : document.getElementById('s-su').value,
+    SMTP_PASS                   : document.getElementById('s-spw').value,
+    ALERT_TO                    : document.getElementById('s-at').value,
+  };
+  const r = await api('/api/settings','POST', body);
+  const msg = document.getElementById('settings-msg');
+  msg.textContent = r?.ok ? '✓ Saved' : '✗ Error';
+  msg.style.color = r?.ok ? 'var(--elite)' : 'var(--nuked)';
+  setTimeout(() => { msg.textContent=''; }, 3000);
+  loadSettings();
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+async function api(url, method='GET', body=null) {
+  try {
+    const opts = { method, headers: {'Content-Type':'application/json'} };
+    if (body) opts.body = JSON.stringify(body);
+    const r = await fetch(url, opts);
+    return await r.json();
+  } catch { return null; }
+}
+
+function esc(s) { return (s||'').replace(/[<>&"]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c])); }
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+connectWs();
+loadDashboard();
+setInterval(loadDashboard, 30000);  // refresh dashboard every 30s
+</script>
+</body>
+</html>
