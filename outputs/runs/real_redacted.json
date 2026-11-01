@@ -1,0 +1,101 @@
+# Redacted Dataset — Domain Portfolio Scan (PII/IP-Safe)
+
+---
+
+## Redacted Records
+
+### CLEAN (health 55–62)
+
+| id | health_score | verdict_key | hard_fail | coverage | checks_succeeded/total | dns_resolves | blacklists_clean | whois_year | age_years_whois | snapshot_count | age_years_wayback | value_band | model_confidence |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| D-0001 | 62 | CLEAN | false | 1.00 | 6/6 | false | 3/3 | 2016 | 10.1 | 4 | 8.0 | mid | medium |
+| D-0002 | 62 | CLEAN | false | 0.83 | 5/6 | false | 3/3 | 2016 | 10.1 | 0 | 0.0 | high | medium |
+| D-0003 | 62 | CLEAN | false | 0.83 | 5/6 | false | 3/3 | 2016 | 10.1 | 0 | 0.0 | high | medium |
+| D-0004 | 62 | CLEAN | false | 0.83 | 5/6 | false | 3/3 | 2016 | 10.1 | 0 | 0.0 | low | low |
+| D-0005 | 62 | CLEAN | false | 0.83 | 5/6 | false | 3/3 | 2016 | 10.1 | 0 | 0.0 | low | low |
+| D-0006 | 62 | CLEAN | false | 0.83 | 5/6 | false | 3/3 | 2017 | 9.1 | 0 | 0.0 | high | medium |
+| D-0007 | 62 | CLEAN | false | 0.83 | 5/6 | false | 3/3 | 2017 | 9.1 | 0 | 0.0 | high | medium |
+| D-0008 | 62 | CLEAN | false | 0.83 | 5/6 | false | 3/3 | 2015 | 11.1 | 0 | 0.0 | high | medium |
+| D-0009 | 62 | CLEAN | false | 0.83 | 5/6 | false | 3/3 | 2013 | 13.1 | 0 | 0.0 | high | medium |
+| D-0010 | 62 | CLEAN | false | 0.83 | 5/6 | false | 3/3 | 2015 | 11.1 | 0 | 0.0 | mid | medium |
+| D-0011 | 62 | CLEAN | false | 0.83 | 5/6 | false | 3/3 | 2015 | 11.1 | 0 | 0.0 | high | medium |
+| D-0012 | 62 | CLEAN | false | 0.83 | 5/6 | false | 3/3 | 2016 | 10.1 | 0 | 0.0 | low | low |
+| D-0013 | 62 | CLEAN | false | 0.83 | 5/6 | false | 3/3 | 2007 | 19.1 | 0 | 0.0 | mid | medium |
+| D-0014 | 59 | CLEAN | false | 0.83 | 5/6 | false | 3/3 | 2023 | 3.1 | 0 | 0.0 | low | low |
+| D-0015 | 59 | CLEAN | false | 0.83 | 5/6 | false | 3/3 | 2020 | 6.1 | 0 | 0.0 | high | medium |
+| D-0016 | 59 | CLEAN | false | 0.83 | 5/6 | false | 3/3 | 2023 | 3.0 | 0 | 0.0 | high | medium |
+| D-0017 | 59 | CLEAN | false | 0.83 | 5/6 | false | 3/3 | 2022 | 4.0 | 0 | 0.0 | high | medium |
+| D-0018 | 59 | CLEAN | false | 0.83 | 5/6 | false | 3/3 | 2022 | 4.1 | 0 | 0.0 | high | medium |
+| D-0019 | 59 | CLEAN | false | 0.83 | 5/6 | false | 3/3 | 2022 | 4.1 | 0 | 0.0 | high | medium |
+| D-0020 | 59 | CLEAN | false | 0.83 | 5/6 | false | 3/3 | 2021 | 5.1 | 0 | 0.0 | high | medium |
+| D-0021 | 59 | CLEAN | false | 0.83 | 5/6 | false | 3/3 | 2021 | 5.1 | 0 | 0.0 | high | medium |
+| D-0022 | 59 | CLEAN | false | 0.83 | 5/6 | false | 3/3 | 2022 | 4.1 | 0 | 0.0 | high | medium |
+| D-0023 | 59 | CLEAN | false | 0.83 | 5/6 | false | 3/3 | 2022 | 4.1 | 0 | 0.0 | high | medium |
+| D-0024 | 59 | CLEAN | false | 0.83 | 5/6 | false | 3/3 | 2022 | 4.1 | 0 | 0.0 | high | medium |
+| D-0025 | 59 | CLEAN | false | 0.83 | 5/6 | false | 3/3 | 2021 | 5.1 | 0 | 0.0 | high | medium |
+| D-0026 | 59 | CLEAN | false | 0.83 | 5/6 | false | 3/3 | 2023 | 3.1 | 0 | 0.0 | low | medium |
+| D-0027 | 59 | CLEAN | false | 0.83 | 5/6 | false | 3/3 | 2023 | 3.1 | 0 | 0.0 | high | medium |
+| D-0028 | 59 | CLEAN | false | 0.83 | 5/6 | false | 3/3 | 2021 | 5.1 | 0 | 0.0 | high | medium |
+| D-0029 | 58 | CLEAN | false | 1.00 | 6/6 | false | 3/3 | 2016 | 10.1 | 9 | 15.5 | high | medium |
+| D-0030 | 55 | CLEAN | false | 0.83 | 5/6 | false | 3/3 | 2024 | 2.1 | 0 | 0.0 | high | medium |
+| D-0031 | 55 | CLEAN | false | 0.83 | 5/6 | false | 3/3 | 2024 | 2.1 | 0 | 0.0 | high | medium |
+| D-0032 | 55 | CLEAN | false | 0.83 | 5/6 | false | 3/3 | 2025 | 1.1 | 0 | 0.0 | high | medium |
+| D-0033 | 55 | CLEAN | false | 0.83 | 5/6 | false | 3/3 | 2025 | 1.1 | 0 | 0.0 | high | medium |
+| D-0034 | 55 | CLEAN | false | 0.83 | 5/6 | false | 3/3 | 2025 | 1.1 | 0 | 0.0 | high | medium |
+| D-0035 | 55 | CLEAN | false | 0.83 | 5/6 | false | 3/3 | 2024 | 2.1 | 0 | 0.0 | mid | medium |
+| D-0036 | 55 | CLEAN | false | 0.83 | 5/6 | false | 3/3 | 2025 | 1.1 | 0 | 0.0 | mid | medium |
+| D-0037 | 55 | CLEAN | false | 0.83 | 5/6 | false | 3/3 | 2025 | 1.1 | 0 | 0.0 | mid | medium |
+| D-0038 | 55 | CLEAN | false | 0.83 | 5/6 | false | 3/3 | 2025 | 1.1 | 0 | 0.0 | high | medium |
+| D-0039 | 55 | CLEAN | false | 0.83 | 5/6 | false | 3/3 | 2024 | 2.1 | 0 | 0.0 | high | medium |
+| D-0040 | 55 | CLEAN | false | 0.83 | 5/6 | false | 3/3 | 2025 | 1.1 | 0 | 0.0 | low | low |
+| D-0041 | 55 | CLEAN | false | 0.83 | 5/6 | false | 3/3 | 2025 | 1.1 | 0 | 0.0 | high | medium |
+| D-0042 | 55 | CLEAN | false | 0.83 | 5/6 | false | 3/3 | 2025 | 1.1 | 0 | 0.0 | high | medium |
+| D-0043 | 55 | CLEAN | false | 0.83 | 5/6 | false | 3/3 | 2025 | 1.1 | 0 | 0.0 | high | medium |
+| D-0044 | 55 | CLEAN | false | 0.83 | 5/6 | false | 3/3 | 2025 | 1.1 | 0 | 0.0 | mid | medium |
+| D-0045 | 55 | CLEAN | false | 0.83 | 5/6 | false | 3/3 | 2025 | 1.1 | 0 | 0.0 | high | medium |
+| D-0046 | 55 | CLEAN | false | 0.83 | 5/6 | false | 3/3 | 2024 | 2.1 | 0 | 0.0 | high | medium |
+| D-0047 | 55 | CLEAN | false | 0.83 | 5/6 | false | 3/3 | 2025 | 1.1 | 0 | 0.0 | mid | medium |
+| D-0048 | 55 | CLEAN | false | 0.83 | 5/6 | false | 3/3 | 2024 | 2.1 | 0 | 0.0 | high | medium |
+| D-0049 | 55 | CLEAN | false | 0.83 | 5/6 | false | 3/3 | 2025 | 1.1 | 0 | 0.0 | high | medium |
+| D-0050 | 55 | CLEAN | false | 0.83 | 5/6 | false | 3/3 | 2025 | 1.1 | 0 | 0.0 | high | medium |
+| D-0051 | 55 | CLEAN | false | 0.83 | 5/6 | false | 3/3 | 2025 | 1.1 | 0 | 0.0 | high | medium |
+| D-0052 | 55 | CLEAN | false | 0.83 | 5/6 | false | 3/3 | 2025 | 1.1 | 0 | 0.0 | mid | medium |
+
+### FLAGGED
+
+| id | health_score | verdict_key | hard_fail | coverage | checks_succeeded/total | dns_resolves | blacklists_clean | whois_year | age_years_whois | snapshot_count | negative_signals | value_band | model_confidence |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| D-0053 | 42 | FLAGGED | false | 0.83 | 5/6 | false | 3/3 | 2026 | 0.1 | 0 | new_registration_risk | low | low |
+
+### NUKED
+
+| id | health_score | verdict_key | hard_fail | coverage | checks_succeeded/total | dns_resolves | blacklists_clean | whois_year | age_years_whois | snapshot_count | negative_signals | value_band | model_confidence |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| D-0054 | 0 | NUKED | false | 0.83 | 5/6 | **true** | 3/3 | 2005 | 21.0 | 0 | site_still_live; still_owned | mid | medium |
+
+### ELITE
+
+`elite: []` — empty (preserved as-is; no rows qualify).
+
+---
+
+## Preserved aggregate facts (safe for portfolio narrative)
+
+- Total rows: **54** (1 elite bucket empty, 52 clean, 1 flagged, 1 nuked).
+- Health-score distribution: `{62: 13, 59: 15, 58: 1, 55: 24, 42: 1, 0: 1}`.
+- Verdict distribution: `{CLEAN: 52, FLAGGED: 1, NUKED: 1}`.
+- `hard_fail` is `false` on **every** row (including the NUKED row — its score-0 comes from *negative signals*, not a hard check fail; this is a genuine quirk in the source that a portfolio can showcase).
+- `check_status.majestic` is `not_applicable` on all rows → `rankability_verified: false` everywhere.
+- `wayback` check outcome split: `ok` on **2** rows (D-0001, D-0029), `rate_limited` on all others.
+- `blacklists`: 3/3 clean on every row; no `blacklisted_on` entries anywhere.
+- `safebrowsing.matches`: empty on all rows (0 matches).
+- `dns_resolves`: `false` on 53/54; `true` only on the single NUKED row — consistent with the "site still live ⇒ not available" signal.
+
+---
+
+## Notes for your portfolio use
+
+- **Do not re-run this pipeline against the same source and publish the tokenized output unmodified** — a determined reader can brute-force `refinance<city>.com`-style patterns from the retained `value_band`/`age_years_whois`/`snapshot_count` columns. If this is going on a public site, either (a) apply k-anonymity (suppress any row where the tuple `(age_bucket, value_band, snapshot_count)` is unique), or (b) shuffle `value_band` within `verdict_key` buckets before export.
+- The `audit_log` weights are the single biggest IP leak in the original file; they're gone, but if you have the raw file anywhere in your repo history, treat that as compromised.
+- The `name_in_domain: true` rows (2 of them) are the highest re-identification risk in the original — both names are common, but the domain strings themselves are the leak vector. They're fully tokenized above.
+- `elite: []` being empty is itself a portfolio-relevant fact (your scanner found zero domains passing all elite criteria in this batch) — keep it visible so the demo shows the empty-state handling.
